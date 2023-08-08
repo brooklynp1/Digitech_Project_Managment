@@ -1,0 +1,35 @@
+#include "dht.h"
+#define dht_apin A1
+
+dht DHT;
+
+const int RELAY_PIN = 5; // Water Pump Relay
+const int MOISTURE_SIGNAL = A5; // Soil Moisture Sensor
+
+void setup() {
+  pinMode(RELAY_PIN, OUTPUT);
+  Serial.begin(9600); // Start the serial communication
+}
+
+void loop() {
+  int Moisture = analogRead(MOISTURE_SIGNAL);
+  Serial.print("Soil Moisture Level: ");
+  Serial.println(Moisture);
+
+  if (Moisture > 860) {
+    digitalWrite(RELAY_PIN, HIGH); // Turn on pump
+    delay(5000); // Pump runs for 5 seconds
+
+    digitalWrite(RELAY_PIN, LOW);  // Turn off pump
+    delay(5000); // Pause for 5 seconds before the next reading
+  }
+
+  int chk = DHT11.read(DHT11PIN);
+  Serial.print("Humidity (%): ");
+  Serial.println((float)DHT11.humidity, 2);
+
+  Serial.print("Temperature (C): ");
+  Serial.println((float)DHT11.temperature, 2);
+
+  delay(200); // Delay before the next moisture and temperature/humidity reading
+}
