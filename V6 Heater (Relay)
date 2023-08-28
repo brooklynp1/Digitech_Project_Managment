@@ -1,0 +1,21 @@
+
+// constants won't change
+const int HEATER_RELAY_PIN = 3;  // the Arduino pin, which connects to the IN pin of relay
+
+// the setup function runs once when you press reset or power the board
+void setup() {
+  // initialize digital pin A5 as an output.
+  pinMode(RELAY_PIN, OUTPUT);
+}
+
+// the loop function runs over and over again forever
+void loop() {
+ if (DHT11.temperature < 24.0) {
+    digitalWrite(HEATER_RELAY_PIN, HIGH); // Turn on fan
+  } else {
+    digitalWrite(HEATER_RELAY_PIN, LOW); // Turn off fan
+  }
+  delay(2000); // Delay for 2 seconds before the next moisture and temperature reading
+}
+
+}
