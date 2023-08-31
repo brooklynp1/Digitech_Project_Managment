@@ -1,0 +1,116 @@
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+#include <dht11.h>
+dht11 DHT11;
+
+#define MOISTURE_SIGNAL A1 // Soil Moisture Sensor
+#define DHT11PIN 9        // DHT11 Sensor
+
+const int WATER_RELAY_PIN = 5;       // Water Pump Relay
+const int FAN_RELAY_PIN = 6;         // Fan Relay
+const int HEATER_RELAY_PIN = 3;
+const int BUTTON_ONE = 2;
+int moistureInPercent;
+int screenState;
+
+void setup() {
+  pinMode(WATER_RELAY_PIN, OUTPUT);
+  pinMode(FAN_RELAY_PIN, OUTPUT); // Initialize fan relay pin
+  pinMode(HEATER_RELAY_PIN, OUTPUT);
+
+  pinMode(BUTTON_ONE, INPUT_PULLUP); // Button pin setup
+
+  lcd.init();
+  lcd.clear();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("T=");
+
+  lcd.setCursor(4, 1);
+  lcd.print("Humid=");
+
+  attachInterrupt(digitalPinToInterrupt(BUTTON_ONE), LCD, RISING);
+
+  Serial.begin(9600); // Start the serial communication
+}
+
+void loop() {
+  int Moisture = analogRead(MOISTURE_SIGNAL);
+  moistureInPercent = map(Moisture, 0, 1023, 0, 100); // Map the moisture value to a percentage
+  Serial.print("Soil Moisture Level: ");
+  Serial.println(moistureInPercent);
+  lcd.setCursor(9, 0);
+  lcd.print("S=");
+
+  lcd.setCursor(11, 0);
+  lcd.print(moistureInPercent);
+  lcd.print("% ");
+
+  if (Moisture > 900) {
+    digitalWrite(WATER_RELAY_PIN, HIGH); // Turn on pump
+  } else {
+    digitalWrite(WATER_RELAY_PIN, LOW); // Turn off pump
+  }
+
+  DHT11.read(DHT11PIN);
+
+  Serial.print("Humidity (%): ");
+  Serial.println((float)DHT11.humidity, 2);
+
+  Serial.print("Temperature (C): ");
+  Serial.println((float)DHT11.temperature, 2);
+
+  lcd.setCursor(10, 1);
+  lcd.print(DHT11.humidity);
+  Serial.print("Current humidity = ");
+  Serial.print(DHT11.humidity);
+  Serial.print("%  ");
+  lcd.print("%");
+
+  lcd.setCursor(2, 0);
+  lcd.print(DHT11.temperature);
+  Serial.print("Temperature = ");
+  Serial.print(DHT11.temperature);
+  lcd.print("c"); // Clear the previous temperature value
+
+  if (DHT11.temperature > 30.0) {
+    digitalWrite(FAN_RELAY_PIN, HIGH); // Turn on fan
+  } else {
+    digitalWrite(FAN_RELAY_PIN, LOW); // Turn off fan
+  }
+
+  if (DHT11.temperature < 24.0) {
+    digitalWrite(HEATER_RELAY_PIN, HIGH); // Turn on fan
+  } else {
+    digitalWrite(HEATER_RELAY_PIN, LOW); // Turn off fan
+  }
+
+  // Button functionality
+  if (BUTTONPRESSED()) {
+      lcd.display();
+      lcd.backlight();
+      delay(5000);
+    } else {
+      lcd.noDisplay();
+      lcd.noBacklight();
+    }
+
+    delay(500); // Debounce delay
+    delay(2000); // Delay for 2 seconds before the next moisture and temperature reading
+
+  }
+  
+
+bool BUTTONPRESSED() {
+  int buttonState = digitalRead(BUTTON_ONE);
+  if (buttonState == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+void LCD(){
+  screenState=!screenState;
+  
+}
